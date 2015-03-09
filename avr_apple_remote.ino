@@ -95,5 +95,5 @@ ISR(PCINT0_vect)
 {
 	cli(); // Disable interrupts
 	send_command(RIGHT_COMMAND);
-    sei(); // Enable interrupts
+        sei(); // Enable interrupts
 }
