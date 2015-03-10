@@ -31,7 +31,7 @@
 #include <inttypes.h>
 #include <util/delay.h>
 
-#define F_CPU 8000000 // Set CPU frequency to 8Mhz
+#define F_CPU 8000000UL // Set CPU frequency to 8Mhz
 
 // Apple remote specific commands
 #define APPLE_IDENTIFIER 0b0111100000010001
@@ -46,12 +46,13 @@
 #define ENABLE_IR_LED  TCCR0A |= (1<<COM0A0) // Toggle OC0A/OC0B on Compare Match [Page 78]
 #define DISABLE_IR_LED TCCR0A &= ~(1<<COM0A0) // Normal port operation, OC0A/OC0B disconnected [Page 78]
 
-#define BUTTON_ADC_VARIANCE_ALLOWED 20 // Sets the variance allowed for the ADC conversion matches for the button presses
+// ADC voltage values of each button
 #define RIGHT_BUTTON_ADC_VALUE 0
 #define UP_BUTTON_ADC_VALUE 145
 #define DOWN_BUTTON_ADC_VALUE 329
 #define LEFT_BUTTON_ADC_VALUE 505
 #define MENU_BUTTON_ADC_VALUE 741
+#define BUTTON_ADC_VARIANCE_ALLOWED 20 // Sets the variance allowed for the ADC conversion matches for the button presses
 
 void setup(){
     DDRB |= (1 << DDB0); // Set pin PB0 as output. OC0A is on PB0
@@ -76,6 +77,7 @@ void setup(){
 
 void loop(){
     send_command(MENU_COMMAND);
+	_delay_us(5000);
 }
 
 // The NEC protocol that the remote uses expects commands in the following format (time in us): 
