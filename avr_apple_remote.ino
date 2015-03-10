@@ -129,10 +129,8 @@ ISR(PCINT0_vect)
     
     ADCSRA |= (1 << ADSC); // Start the ADC measurement
     while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
-	
-    int adc_low = ADCL; // ADCL must be read first [Page 137]
-    int adc_high = ADCH;
-    uint16_t adc_value = (adc_high << 8) | adc_low; 
+
+    uint16_t adc_value = ADC; 
 	
     if ( adc_value < (RIGHT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED) ){
         send_command(RIGHT_COMMAND);
