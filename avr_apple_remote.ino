@@ -20,11 +20,11 @@
 //                           +----+
 
 // Voltage ladder values (using 10 bit ADC resolution)
-// RIGHT: 0.00V / 0 (2K)
-// UP:    0.71V / 145 (330R)
-// DOWN:  1.61V / 329 (620R)
-// LEFT:  2.47V / 505 (1K)
-// MENU:  3.62V / 741 (3K3)
+// RIGHT: 0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
+// UP:    0.77V @ 5V / 0.46V @ 3V / 158 (330R)
+// DOWN:  1.73V @ 5V / 1.04V @ 3V / 353 (620R)
+// LEFT:  2.6V @ 5V / 1.56V @ 3V / 532 (1K)
+// MENU:  3.72V @ 5V / 2.23V @ 3V / 762 (3K3)
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -48,11 +48,19 @@
 
 // ADC voltage values of each button
 #define RIGHT_BUTTON_ADC_VALUE 0
-#define UP_BUTTON_ADC_VALUE 145
-#define DOWN_BUTTON_ADC_VALUE 329
-#define LEFT_BUTTON_ADC_VALUE 505
-#define MENU_BUTTON_ADC_VALUE 741
+#define UP_BUTTON_ADC_VALUE 158
+#define DOWN_BUTTON_ADC_VALUE 353
+#define LEFT_BUTTON_ADC_VALUE 532
+#define MENU_BUTTON_ADC_VALUE 762
 #define BUTTON_ADC_VARIANCE_ALLOWED 50 // Sets the variance allowed for the ADC conversion matches for the button presses
+
+// Pulse length manual adjustment. Manual adjustment made if internal clock is not accurate. 
+// This needs to be set back to standard values when a external crystal is used.
+#define PULSE_LENGTH_9600 9200
+#define PULSE_LENGTH_4500 4700
+#define PULSE_LENGTH_560 570
+#define PULSE_LENGTH_565 580
+#define PULSE_LENGTH_1690 1750
 
 int main(){
     DDRB |= (1 << DDB0); // Set pin PB0 as output. OC0A is on PB0
@@ -64,7 +72,6 @@ int main(){
     TCCR0B |= (1 << CS00); // Set the Prescaler to be 'clkI/O/(No prescaling)' [Page 80]
     OCR0A = 104; // Set the CTC compare value at which to toggle the OC0A/PB0 pin.
     
-    //ADMUX |= (1 << ADLAR); // Left adjust the result in the ADC register [Page 134]
     ADMUX |= (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
     // ADC Prescaler needs to be set so that the ADC input frequency is between 50 - 200kHz. [Page 125]
     ADCSRA |= (1 << ADPS1) | (1 << ADPS2); // Set the prescalar to be 64 which is 125kHz with a 8Mhz clock [Page 136] 
@@ -75,10 +82,7 @@ int main(){
 
     sei(); // Enables interrupts
     
-    while(1){
-        //send_command(MENU_COMMAND);
-        //_delay_us(3000000);
-    }
+    while(1){}
     return 0;
 }
 
@@ -97,21 +101,21 @@ void send_command(uint8_t command){
  
     // Send leader pulse
     ENABLE_IR_LED;
-    _delay_us(9200);
+    _delay_us(PULSE_LENGTH_9600);
     DISABLE_IR_LED;
-    _delay_us(4700);
+    _delay_us(PULSE_LENGTH_4500);
     
     // Loop through the 32 bits and send 0 or 1 bit specific pulses
     int count = 0;
     while(count < 32){
         ENABLE_IR_LED;
-        _delay_us(560);
+        _delay_us(PULSE_LENGTH_560);
         DISABLE_IR_LED;
         if(data & 0b1){
-            _delay_us(565);
+            _delay_us(PULSE_LENGTH_565);
         }
         else{
-            _delay_us(1690);
+            _delay_us(PULSE_LENGTH_1690);
         }
         // Right shift the data so we only have to compare the LSB
         data = data >> 1;
@@ -120,7 +124,7 @@ void send_command(uint8_t command){
     
     // Send stop pulse
     ENABLE_IR_LED;
-    _delay_us(560);
+    _delay_us(PULSE_LENGTH_560);
     DISABLE_IR_LED;
 }
 
