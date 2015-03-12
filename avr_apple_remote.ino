@@ -35,7 +35,7 @@
 
 // Apple remote specific commands
 #define APPLE_IDENTIFIER 0b0111100000010001
-#define REMOTE_ID 0b1
+#define REMOTE_ID 0b00110001
 #define MENU_COMMAND 0b11111100
 #define PLAY_COMMAND 0b11111010
 #define RIGHT_COMMAND 0b11111001
@@ -52,9 +52,9 @@
 #define DOWN_BUTTON_ADC_VALUE 329
 #define LEFT_BUTTON_ADC_VALUE 505
 #define MENU_BUTTON_ADC_VALUE 741
-#define BUTTON_ADC_VARIANCE_ALLOWED 20 // Sets the variance allowed for the ADC conversion matches for the button presses
+#define BUTTON_ADC_VARIANCE_ALLOWED 50 // Sets the variance allowed for the ADC conversion matches for the button presses
 
-void setup(){
+int main(){
     DDRB |= (1 << DDB0); // Set pin PB0 as output. OC0A is on PB0
     TCNT0 = 0; // Set the counter to 0
     TCCR0A = 0; // Initialize the Timer/Counter Control Register A
@@ -64,7 +64,7 @@ void setup(){
     TCCR0B |= (1 << CS00); // Set the Prescaler to be 'clkI/O/(No prescaling)' [Page 80]
     OCR0A = 104; // Set the CTC compare value at which to toggle the OC0A/PB0 pin.
     
-    ADMUX |= (1 << ADLAR); // Left adjust the result in the ADC register [Page 134]
+    //ADMUX |= (1 << ADLAR); // Left adjust the result in the ADC register [Page 134]
     ADMUX |= (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
     // ADC Prescaler needs to be set so that the ADC input frequency is between 50 - 200kHz. [Page 125]
     ADCSRA |= (1 << ADPS1) | (1 << ADPS2); // Set the prescalar to be 64 which is 125kHz with a 8Mhz clock [Page 136] 
@@ -72,12 +72,14 @@ void setup(){
     
     GIMSK |= (1 << PCIE); // Enable pin change interrupts on the General Interrupt Mask Register [Page 51]
     PCMSK |= (1 << PCINT4); // Enable interrupts on PB4 on the Pin Change Mask Register
-    sei(); // Enables interrupts
-}
 
-void loop(){
-    send_command(MENU_COMMAND);
-	_delay_us(5000);
+    sei(); // Enables interrupts
+    
+    while(1){
+        //send_command(MENU_COMMAND);
+        //_delay_us(3000000);
+    }
+    return 0;
 }
 
 // The NEC protocol that the remote uses expects commands in the following format (time in us): 
@@ -95,9 +97,9 @@ void send_command(uint8_t command){
  
     // Send leader pulse
     ENABLE_IR_LED;
-    _delay_us(9000);
+    _delay_us(9200);
     DISABLE_IR_LED;
-    _delay_us(4500);
+    _delay_us(4700);
     
     // Loop through the 32 bits and send 0 or 1 bit specific pulses
     int count = 0;
@@ -125,9 +127,7 @@ void send_command(uint8_t command){
 // Pin change interrupt handler
 ISR(PCINT0_vect)
 {
-    cli(); // Disable interrupts while handling the interrupt
-    
-    send_command(MENU_COMMAND);
+    GIMSK &= ~(1 << PCIE); // Disable interrupts while handling the interrupt
     
     ADCSRA |= (1 << ADSC); // Start the ADC measurement
     while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
@@ -145,6 +145,8 @@ ISR(PCINT0_vect)
     } else if ( (adc_value > (MENU_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (MENU_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
         send_command(MENU_COMMAND);
     }
-	
-    sei(); // Enable interrupts
+    
+    _delay_us(100000); // Delay in place to stop multiple unintended presses
+    GIMSK |= (1 << PCIE); // Enable interrupts
+    GIFR = (1<<PCIF); // Clear pin change interrupt flag. [Page 52]
 }
