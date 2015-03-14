@@ -46,8 +46,8 @@
 #define DOWN_COMMAND 0b11110011
 #define SELECT_COMMAND 0b10100011
 
-#define ENABLE_IR_LED  TCCR0A |= (1<<COM0A0) // Toggle OC0A/OC0B on Compare Match [Page 78]
-#define DISABLE_IR_LED TCCR0A &= ~(1<<COM0A0) // Normal port operation, OC0A/OC0B disconnected [Page 78]
+#define ENABLE_LEDS  TCCR0A |= (1<<COM0A0); PINB |= (1 << PINB1);  // Toggle OC0A/OC0B on Compare Match [Page 78]; Turn on status LED.
+#define DISABLE_LEDS TCCR0A &= ~(1<<COM0A0); PINB &= ~(1 << PINB1); // Normal port operation, OC0A/OC0B disconnected [Page 78]. Turn off status LED.
 
 // ADC voltage values of each button on PB4
 #define UP_BUTTON_ADC_VALUE 0
@@ -62,13 +62,13 @@
 // Pulse length manual adjustment. Manual adjustment made if internal clock is not accurate. 
 // This needs to be set back to standard values when a external crystal is used.
 #define PULSE_LENGTH_9600 9200
-#define PULSE_LENGTH_4500 4700
+#define PULSE_LENGTH_4500 4600
 #define PULSE_LENGTH_560 570
 #define PULSE_LENGTH_565 580
 #define PULSE_LENGTH_1690 1750
 
 int main(){
-    DDRB |= (1 << DDB0); // Set pin PB0 as output. OC0A is on PB0
+    DDRB |= (1 << DDB1) | (1 << DDB0); // Set pin PB0 as output. OC0A is on PB0. Setting PB1 as output for status LED.
     TCNT0 = 0; // Set the counter to 0
     TCCR0A = 0; // Initialize the Timer/Counter Control Register A
     TCCR0B = 0; // Initialize the Timer/Counter Control Register B
@@ -105,17 +105,17 @@ void send_command(uint8_t command){
     data += APPLE_IDENTIFIER;
  
     // Send leader pulse
-    ENABLE_IR_LED;
+    ENABLE_LEDS;
     _delay_us(PULSE_LENGTH_9600);
-    DISABLE_IR_LED;
+    DISABLE_LEDS;
     _delay_us(PULSE_LENGTH_4500);
     
     // Loop through the 32 bits and send 0 or 1 bit specific pulses
     int count = 0;
     while(count < 32){
-        ENABLE_IR_LED;
+        ENABLE_LEDS;
         _delay_us(PULSE_LENGTH_560);
-        DISABLE_IR_LED;
+        DISABLE_LEDS;
         if(data & 0b1){
             _delay_us(PULSE_LENGTH_565);
         }
@@ -128,9 +128,9 @@ void send_command(uint8_t command){
     }
     
     // Send stop pulse
-    ENABLE_IR_LED;
+    ENABLE_LEDS;
     _delay_us(PULSE_LENGTH_560);
-    DISABLE_IR_LED;
+    DISABLE_LEDS;
 }
 
 // Pin change interrupt handler
