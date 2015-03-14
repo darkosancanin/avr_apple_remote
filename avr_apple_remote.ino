@@ -14,8 +14,8 @@
 // ATtiny85, running @ 8MHZ
 //                             +-\/-+
 //                       PB5  1|    |8   VCC
-//   Buttons 4-5 (ADC3)  PB3  2|    |7   PB2
-//   Buttons 1-3 (ADC2)  PB4  3|    |6   PB1
+//   Buttons 4-6 (ADC3)  PB3  2|    |7   PB2
+//   Buttons 1-3 (ADC2)  PB4  3|    |6   PB1  Status LED
 //                       GND  4|    |5   PB0  (OC0A)   IR LED
 //                             +----+
 
@@ -138,7 +138,7 @@ ISR(PCINT0_vect)
 {
     GIMSK &= ~(1 << PCIE); // Disable interrupts while handling the interrupt
     
-    if (!(PINB & (1 << PINB4))) { // If PB4 is low
+    if (!(PINB & (1 << PINB4))) { // If PB4 is low then check if its buttons 1 to 3.
         ADMUX = (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
         ADCSRA |= (1 << ADSC); // Start the ADC measurement
         while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
@@ -151,7 +151,7 @@ ISR(PCINT0_vect)
         } else if ( (adc_value > (DOWN_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (DOWN_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
             send_command(DOWN_COMMAND);
         }
-    } else {
+    } else { // Otherwise check if its button 4 to 6
         ADMUX = (1 << MUX1) | (1 << MUX0); // Connect PB3/ADC3 to the ADC [Page 135]
         ADCSRA |= (1 << ADSC); // Start the ADC measurement
         while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
