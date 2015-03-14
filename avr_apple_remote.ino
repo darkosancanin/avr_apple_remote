@@ -39,11 +39,12 @@
 #define APPLE_IDENTIFIER 0b0111100000010001
 #define REMOTE_ID 0b00110001
 #define MENU_COMMAND 0b11111100
-#define PLAY_COMMAND 0b11111010
+#define PLAY_COMMAND 0b10100000
 #define RIGHT_COMMAND 0b11111001
 #define LEFT_COMMAND 0b11110110
 #define UP_COMMAND 0b11110101
 #define DOWN_COMMAND 0b11110011
+#define SELECT_COMMAND 0b10100011
 
 #define ENABLE_IR_LED  TCCR0A |= (1<<COM0A0) // Toggle OC0A/OC0B on Compare Match [Page 78]
 #define DISABLE_IR_LED TCCR0A &= ~(1<<COM0A0) // Normal port operation, OC0A/OC0B disconnected [Page 78]
@@ -54,7 +55,8 @@
 #define DOWN_BUTTON_ADC_VALUE 367
 // ADC voltage values of each button on PB3
 #define LEFT_BUTTON_ADC_VALUE 0
-#define MENU_BUTTON_ADC_VALUE 158
+#define SELECT_BUTTON_ADC_VALUE 158
+#define MENU_BUTTON_ADC_VALUE 367
 #define BUTTON_ADC_VARIANCE_ALLOWED 50 // Sets the variance allowed for the ADC conversion matches for the button presses
 
 // Pulse length manual adjustment. Manual adjustment made if internal clock is not accurate. 
@@ -157,6 +159,8 @@ ISR(PCINT0_vect)
         
         if ( adc_value < (LEFT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED) ) {
             send_command(LEFT_COMMAND);
+        } else if ( (adc_value > (SELECT_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (SELECT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
+            send_command(SELECT_COMMAND);
         } else if ( (adc_value > (MENU_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (MENU_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
             send_command(MENU_COMMAND);
         }
