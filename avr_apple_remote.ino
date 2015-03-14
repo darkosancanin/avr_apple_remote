@@ -12,19 +12,21 @@
 // and each button is identified via a ADC conversion.
 
 // ATtiny85, running @ 8MHZ
-//                           +-\/-+
-//                     PB5  1|    |8   VCC
-//                     PB3  2|    |7   PB2
-//   Buttons   (ADC2)  PB4  3|    |6   PB1
-//                     GND  4|    |5   PB0  (OC0A)   IR LED
-//                           +----+
+//                             +-\/-+
+//                       PB5  1|    |8   VCC
+//   Buttons 4-5 (ADC3)  PB3  2|    |7   PB2
+//   Buttons 1-3 (ADC2)  PB4  3|    |6   PB1
+//                       GND  4|    |5   PB0  (OC0A)   IR LED
+//                             +----+
 
-// Voltage ladder values (using 10 bit ADC resolution)
-// RIGHT: 0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
-// UP:    0.77V @ 5V / 0.46V @ 3V / 158 (330R)
-// DOWN:  1.73V @ 5V / 1.04V @ 3V / 353 (620R)
-// LEFT:  2.6V @ 5V / 1.56V @ 3V / 532 (1K)
-// MENU:  3.72V @ 5V / 2.23V @ 3V / 762 (3K3)
+// Voltage ladder values (using 10 bit ADC resolution) on PB4
+// UP:    0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
+// RIGHT: 0.77V @ 5V / 0.46V @ 3V / 158 (330R)
+// DOWN:  1.78V @ 5V / 1.08V @ 3V / 367 (680R)
+
+// Voltage ladder values (using 10 bit ADC resolution) on PB3
+// LEFT:  0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
+// MENU:  0.77V @ 5V / 0.46V @ 3V / 158 (330R)
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -46,12 +48,13 @@
 #define ENABLE_IR_LED  TCCR0A |= (1<<COM0A0) // Toggle OC0A/OC0B on Compare Match [Page 78]
 #define DISABLE_IR_LED TCCR0A &= ~(1<<COM0A0) // Normal port operation, OC0A/OC0B disconnected [Page 78]
 
-// ADC voltage values of each button
-#define RIGHT_BUTTON_ADC_VALUE 0
-#define UP_BUTTON_ADC_VALUE 158
-#define DOWN_BUTTON_ADC_VALUE 353
-#define LEFT_BUTTON_ADC_VALUE 532
-#define MENU_BUTTON_ADC_VALUE 762
+// ADC voltage values of each button on PB4
+#define UP_BUTTON_ADC_VALUE 0
+#define RIGHT_BUTTON_ADC_VALUE 158
+#define DOWN_BUTTON_ADC_VALUE 367
+// ADC voltage values of each button on PB3
+#define LEFT_BUTTON_ADC_VALUE 0
+#define MENU_BUTTON_ADC_VALUE 158
 #define BUTTON_ADC_VARIANCE_ALLOWED 50 // Sets the variance allowed for the ADC conversion matches for the button presses
 
 // Pulse length manual adjustment. Manual adjustment made if internal clock is not accurate. 
@@ -72,14 +75,14 @@ int main(){
     TCCR0B |= (1 << CS00); // Set the Prescaler to be 'clkI/O/(No prescaling)' [Page 80]
     OCR0A = 104; // Set the CTC compare value at which to toggle the OC0A/PB0 pin.
     
-    ADMUX |= (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
     // ADC Prescaler needs to be set so that the ADC input frequency is between 50 - 200kHz. [Page 125]
     ADCSRA |= (1 << ADPS1) | (1 << ADPS2); // Set the prescalar to be 64 which is 125kHz with a 8Mhz clock [Page 136] 
     ADCSRA |= (1 << ADEN); // Enable the ADC [Page 136]
     
     GIMSK |= (1 << PCIE); // Enable pin change interrupts on the General Interrupt Mask Register [Page 51]
-    PCMSK |= (1 << PCINT4); // Enable interrupts on PB4 on the Pin Change Mask Register
-
+    PCMSK |= (1 << PCINT4) | (1 << PCINT3); // Enable interrupts on PB3 and PB4 on the Pin Change Mask Register
+    
+    //PORTB |= (1 << PINB3) | (1 << PINB4); // Turn on pull up resistors for both PB3 and PB4
     sei(); // Enables interrupts
     
     while(1){}
@@ -133,24 +136,34 @@ ISR(PCINT0_vect)
 {
     GIMSK &= ~(1 << PCIE); // Disable interrupts while handling the interrupt
     
-    ADCSRA |= (1 << ADSC); // Start the ADC measurement
-    while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
-
-    uint16_t adc_value = ADC; 
-	
-    if ( adc_value < (RIGHT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED) ){
-        send_command(RIGHT_COMMAND);
-    } else if ( (adc_value > (UP_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (UP_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
-        send_command(UP_COMMAND);
-    } else if ( (adc_value > (DOWN_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (DOWN_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
-        send_command(DOWN_COMMAND);
-    } else if ( (adc_value > (LEFT_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (LEFT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
-        send_command(LEFT_COMMAND);
-    } else if ( (adc_value > (MENU_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (MENU_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
-        send_command(MENU_COMMAND);
+    if (!(PINB & (1 << PINB4))) { // If PB4 is low
+        ADMUX = (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
+        ADCSRA |= (1 << ADSC); // Start the ADC measurement
+        while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
+        uint16_t adc_value = ADC; // Get the digital value
+    
+        if ( adc_value < (UP_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED) ){
+            send_command(UP_COMMAND);
+        } else if ( (adc_value > (RIGHT_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (RIGHT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
+            send_command(RIGHT_COMMAND);
+        } else if ( (adc_value > (DOWN_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (DOWN_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
+            send_command(DOWN_COMMAND);
+        }
+    } else {
+        ADMUX = (1 << MUX1) | (1 << MUX0); // Connect PB3/ADC3 to the ADC [Page 135]
+        ADCSRA |= (1 << ADSC); // Start the ADC measurement
+        while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
+        uint16_t adc_value = ADC; // Get the digital value
+        
+        if ( adc_value < (LEFT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED) ) {
+            send_command(LEFT_COMMAND);
+        } else if ( (adc_value > (MENU_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (MENU_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
+            send_command(MENU_COMMAND);
+        }
     }
     
     _delay_us(100000); // Delay in place to stop multiple unintended presses
     GIMSK |= (1 << PCIE); // Enable interrupts
     GIFR = (1<<PCIF); // Clear pin change interrupt flag. [Page 52]
 }
+
