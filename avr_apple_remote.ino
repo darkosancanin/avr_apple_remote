@@ -25,8 +25,9 @@
 // DOWN:  1.78V @ 5V / 1.08V @ 3V / 367 (680R)
 
 // Voltage ladder values (using 10 bit ADC resolution) on PB3
-// LEFT:  0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
-// MENU:  0.77V @ 5V / 0.46V @ 3V / 158 (330R)
+// LEFT:    0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
+// SELECT:  0.77V @ 5V / 0.46V @ 3V / 158 (330R)
+// MENU:    1.78V @ 5V / 1.08V @ 3V / 367 (680R)
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -84,7 +85,6 @@ int main(){
     GIMSK |= (1 << PCIE); // Enable pin change interrupts on the General Interrupt Mask Register [Page 51]
     PCMSK |= (1 << PCINT4) | (1 << PCINT3); // Enable interrupts on PB3 and PB4 on the Pin Change Mask Register
     
-    //PORTB |= (1 << PINB3) | (1 << PINB4); // Turn on pull up resistors for both PB3 and PB4
     sei(); // Enables interrupts
     
     while(1){}
