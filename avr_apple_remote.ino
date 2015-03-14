@@ -47,8 +47,8 @@
 #define DOWN_COMMAND 0b11110011
 #define SELECT_COMMAND 0b10100011
 
-#define ENABLE_LEDS  TCCR0A |= (1<<COM0A0); PINB |= (1 << PINB1);  // Toggle OC0A/OC0B on Compare Match [Page 78]; Turn on status LED.
-#define DISABLE_LEDS TCCR0A &= ~(1<<COM0A0); PINB &= ~(1 << PINB1); // Normal port operation, OC0A/OC0B disconnected [Page 78]. Turn off status LED.
+#define ENABLE_IR_LED  TCCR0A |= (1<<COM0A0);  // Toggle OC0A/OC0B on Compare Match [Page 78];
+#define DISABLE_IR_LED TCCR0A &= ~(1<<COM0A0); // Normal port operation, OC0A/OC0B disconnected [Page 78].
 
 // ADC voltage values of each button on PB4
 #define UP_BUTTON_ADC_VALUE 0
@@ -98,6 +98,8 @@ int main(){
 // stop: 560 on
 // commands are 32 bits long, in the format : remote id (8bits), command (8 bits), apple identifier (16 bits)
 void send_command(uint8_t command){
+    PINB |= (1 << PINB1); // Turn on the status LED
+    
     long data = REMOTE_ID;
     data = data << 8;
     data += command;
@@ -105,17 +107,17 @@ void send_command(uint8_t command){
     data += APPLE_IDENTIFIER;
  
     // Send leader pulse
-    ENABLE_LEDS;
+    ENABLE_IR_LED;
     _delay_us(PULSE_LENGTH_9600);
-    DISABLE_LEDS;
+    DISABLE_IR_LED;
     _delay_us(PULSE_LENGTH_4500);
     
     // Loop through the 32 bits and send 0 or 1 bit specific pulses
     int count = 0;
     while(count < 32){
-        ENABLE_LEDS;
+        ENABLE_IR_LED;
         _delay_us(PULSE_LENGTH_560);
-        DISABLE_LEDS;
+        DISABLE_IR_LED;
         if(data & 0b1){
             _delay_us(PULSE_LENGTH_565);
         }
@@ -128,9 +130,11 @@ void send_command(uint8_t command){
     }
     
     // Send stop pulse
-    ENABLE_LEDS;
+    ENABLE_IR_LED;
     _delay_us(PULSE_LENGTH_560);
-    DISABLE_LEDS;
+    DISABLE_IR_LED;
+    
+    PINB &= ~(1 << PINB1); // Turn off the status LED
 }
 
 // Pin change interrupt handler
