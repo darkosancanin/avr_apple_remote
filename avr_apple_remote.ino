@@ -9,7 +9,7 @@
 // This is half a full cycle, meaning it will be off for a half cycle, toggled due to COM0A0, and then on for a half cycle.
 // We enable/disable PWM by enabling toggle on compare mode and then disconnecting OC0A and assuming normal port operation. [Page 78]
 // The buttons are setup in a voltage ladder (http://en.wikipedia.org/wiki/Voltage_ladder). They are triggered via interrupts on PB4 
-// and each button is identified via a ADC conversion.
+// and PB3 and each button is identified via a ADC conversion.
 
 // ATtiny85, running @ 8MHZ
 //                             +-\/-+
@@ -31,6 +31,7 @@
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include <avr/sleep.h>
 #include <inttypes.h>
 #include <util/delay.h>
 
@@ -85,9 +86,18 @@ int main(){
     GIMSK |= (1 << PCIE); // Enable pin change interrupts on the General Interrupt Mask Register [Page 51]
     PCMSK |= (1 << PCINT4) | (1 << PCINT3); // Enable interrupts on PB3 and PB4 on the Pin Change Mask Register
     
+	MCUCR |= (1 << SM1); // Sets the sleep mode to the most efficient 'Power-down'. [Page 35]
+	MCUCR |= (1 << SE); // Sleep Enable. Must be enable the sleep instruction to be executed. [Page 37]
+	WDTCR = 0; // Turn off the unused watchdog timer to reduce power consumption. [Page 37, 46]
+	PRR &= ~(1 << PRUSI); // Power Reduction USI. Shuts down the unused USI module. [Page 38]
+	
     sei(); // Enables interrupts
     
-    while(1){}
+    while(1){
+		ADCSRA &= ~(1 << ADEN); // Disable ADC, saves ~230uA, it gets re-enabled in the interrupt handler
+		sleep_bod_disable(); // Soft disable the brown out detector, it automatically gets enabled on wake up [Page 35]
+        sleep_cpu();
+	}
     return 0;
 }
 
@@ -140,10 +150,11 @@ void send_command(uint8_t command){
 // Pin change interrupt handler
 ISR(PCINT0_vect)
 {
-    GIMSK &= ~(1 << PCIE); // Disable interrupts while handling the interrupt
-    
+    GIMSK &= ~(1 << PCIE); // Disable pin change interrupts while handling the interrupt
+    ADCSRA |= (1<<ADEN); //Enable ADC
+	
     if (!(PINB & (1 << PINB4))) { // If PB4 is low then check if its buttons 1 to 3.
-        ADMUX = (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
+		ADMUX = (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
         ADCSRA |= (1 << ADSC); // Start the ADC measurement
         while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
         uint16_t adc_value = ADC; // Get the digital value
@@ -156,7 +167,7 @@ ISR(PCINT0_vect)
             send_command(DOWN_COMMAND);
         }
     } else { // Otherwise check if its button 4 to 6
-        ADMUX = (1 << MUX1) | (1 << MUX0); // Connect PB3/ADC3 to the ADC [Page 135]
+		ADMUX = (1 << MUX1) | (1 << MUX0); // Connect PB3/ADC3 to the ADC [Page 135]
         ADCSRA |= (1 << ADSC); // Start the ADC measurement
         while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
         uint16_t adc_value = ADC; // Get the digital value
@@ -171,7 +182,7 @@ ISR(PCINT0_vect)
     }
     
     _delay_us(100000); // Delay in place to stop multiple unintended presses
-    GIMSK |= (1 << PCIE); // Enable interrupts
+    GIMSK |= (1 << PCIE); // Enable pin change interrupts on completion
     GIFR = (1<<PCIF); // Clear pin change interrupt flag. [Page 52]
 }
 
