@@ -86,18 +86,18 @@ int main(){
     GIMSK |= (1 << PCIE); // Enable pin change interrupts on the General Interrupt Mask Register [Page 51]
     PCMSK |= (1 << PCINT4) | (1 << PCINT3); // Enable interrupts on PB3 and PB4 on the Pin Change Mask Register
     
-	MCUCR |= (1 << SM1); // Sets the sleep mode to the most efficient 'Power-down'. [Page 35]
-	MCUCR |= (1 << SE); // Sleep Enable. Must be enable the sleep instruction to be executed. [Page 37]
-	WDTCR = 0; // Turn off the unused watchdog timer to reduce power consumption. [Page 37, 46]
-	PRR &= ~(1 << PRUSI); // Power Reduction USI. Shuts down the unused USI module. [Page 38]
-	
+    MCUCR |= (1 << SM1); // Sets the sleep mode to the most efficient 'Power-down'. [Page 35]
+    MCUCR |= (1 << SE); // Sleep Enable. Must be enable the sleep instruction to be executed. [Page 37]
+    WDTCR = 0; // Turn off the unused watchdog timer to reduce power consumption. [Page 37, 46]
+    PRR &= ~(1 << PRUSI); // Power Reduction USI. Shuts down the unused USI module. [Page 38]
+    
     sei(); // Enables interrupts
     
     while(1){
-		ADCSRA &= ~(1 << ADEN); // Disable ADC, saves ~230uA, it gets re-enabled in the interrupt handler
-		sleep_bod_disable(); // Soft disable the brown out detector, it automatically gets enabled on wake up [Page 35]
+        ADCSRA &= ~(1 << ADEN); // Disable ADC, saves ~230uA, it gets re-enabled in the interrupt handler
+        sleep_bod_disable(); // Soft disable the brown out detector, it automatically gets enabled on wake up [Page 35]
         sleep_cpu();
-	}
+    }
     return 0;
 }
 
@@ -152,9 +152,9 @@ ISR(PCINT0_vect)
 {
     GIMSK &= ~(1 << PCIE); // Disable pin change interrupts while handling the interrupt
     ADCSRA |= (1<<ADEN); //Enable ADC
-	
+    
     if (!(PINB & (1 << PINB4))) { // If PB4 is low then check if its buttons 1 to 3.
-		ADMUX = (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
+        ADMUX = (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
         ADCSRA |= (1 << ADSC); // Start the ADC measurement
         while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
         uint16_t adc_value = ADC; // Get the digital value
@@ -167,7 +167,7 @@ ISR(PCINT0_vect)
             send_command(DOWN_COMMAND);
         }
     } else { // Otherwise check if its button 4 to 6
-		ADMUX = (1 << MUX1) | (1 << MUX0); // Connect PB3/ADC3 to the ADC [Page 135]
+        ADMUX = (1 << MUX1) | (1 << MUX0); // Connect PB3/ADC3 to the ADC [Page 135]
         ADCSRA |= (1 << ADSC); // Start the ADC measurement
         while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
         uint16_t adc_value = ADC; // Get the digital value
