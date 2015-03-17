@@ -150,7 +150,6 @@ void send_command(uint8_t command){
 // Pin change interrupt handler
 ISR(PCINT0_vect)
 {
-    GIMSK &= ~(1 << PCIE); // Disable pin change interrupts while handling the interrupt
     ADCSRA |= (1<<ADEN); //Enable ADC
     
     if (!(PINB & (1 << PINB4))) { // If PB4 is low then check if its buttons 1 to 3.
@@ -182,7 +181,5 @@ ISR(PCINT0_vect)
     }
     
     _delay_us(100000); // Delay in place to stop multiple unintended presses
-    GIMSK |= (1 << PCIE); // Enable pin change interrupts on completion
-    GIFR = (1<<PCIF); // Clear pin change interrupt flag. [Page 52]
 }
 
