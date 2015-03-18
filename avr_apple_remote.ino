@@ -31,6 +31,7 @@
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include <avr/power.h>
 #include <avr/sleep.h>
 #include <inttypes.h>
 #include <util/delay.h>
@@ -48,7 +49,7 @@
 #define DOWN_COMMAND 0b11110011
 #define SELECT_COMMAND 0b10100011
 
-#define ENABLE_IR_LED  TCCR0A |= (1<<COM0A0);  // Toggle OC0A/OC0B on Compare Match [Page 78];
+#define ENABLE_IR_LED  TCCR0A |= (1<<COM0A0); // Toggle OC0A/OC0B on Compare Match [Page 78];
 #define DISABLE_IR_LED TCCR0A &= ~(1<<COM0A0); // Normal port operation, OC0A/OC0B disconnected [Page 78].
 
 // ADC voltage values of each button on PB4
@@ -108,14 +109,14 @@ int main(){
 // stop: 560 on
 // commands are 32 bits long, in the format : remote id (8bits), command (8 bits), apple identifier (16 bits)
 void send_command(uint8_t command){
-    PINB |= (1 << PINB1); // Turn on the status LED
-    
+    PORTB |= (1 << PORTB1); // Turn on status LED
+  
     long data = REMOTE_ID;
     data = data << 8;
     data += command;
     data = data << 16;
     data += APPLE_IDENTIFIER;
- 
+
     // Send leader pulse
     ENABLE_IR_LED;
     _delay_us(PULSE_LENGTH_9600);
@@ -140,31 +141,30 @@ void send_command(uint8_t command){
     }
     
     // Send stop pulse
-    ENABLE_IR_LED;
+    ENABLE_IR_LED; 
     _delay_us(PULSE_LENGTH_560);
     DISABLE_IR_LED;
     
-    PINB &= ~(1 << PINB1); // Turn off the status LED
+    PORTB &= ~(1 << PORTB1); // Turn off status LED
 }
 
 // Pin change interrupt handler
 ISR(PCINT0_vect)
 {
-    GIMSK &= ~(1 << PCIE); // Disable pin change interrupts while handling the interrupt
     ADCSRA |= (1<<ADEN); //Enable ADC
-    
+
     if (!(PINB & (1 << PINB4))) { // If PB4 is low then check if its buttons 1 to 3.
         ADMUX = (1 << MUX1); // Connect PB4/ADC2 to the ADC [Page 135]
         ADCSRA |= (1 << ADSC); // Start the ADC measurement
         while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
         uint16_t adc_value = ADC; // Get the digital value
     
-        if ( adc_value < (UP_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED) ){
-            send_command(UP_COMMAND);
-        } else if ( (adc_value > (RIGHT_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (RIGHT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
+        if ( adc_value < (RIGHT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED) ){
             send_command(RIGHT_COMMAND);
         } else if ( (adc_value > (DOWN_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (DOWN_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
             send_command(DOWN_COMMAND);
+        } else if ( (adc_value > (MENU_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (MENU_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
+            send_command(MENU_COMMAND);
         }
     } else { // Otherwise check if its button 4 to 6
         ADMUX = (1 << MUX1) | (1 << MUX0); // Connect PB3/ADC3 to the ADC [Page 135]
@@ -172,12 +172,12 @@ ISR(PCINT0_vect)
         while (ADCSRA & (1 << ADSC)); // Wait until the conversion completes
         uint16_t adc_value = ADC; // Get the digital value
         
-        if ( adc_value < (LEFT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED) ) {
+        if ( adc_value < (UP_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED) ) {
+            send_command(UP_COMMAND);
+        } else if ( (adc_value > (LEFT_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (LEFT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
             send_command(LEFT_COMMAND);
         } else if ( (adc_value > (SELECT_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (SELECT_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
             send_command(SELECT_COMMAND);
-        } else if ( (adc_value > (MENU_BUTTON_ADC_VALUE - BUTTON_ADC_VARIANCE_ALLOWED)) && (adc_value < (MENU_BUTTON_ADC_VALUE + BUTTON_ADC_VARIANCE_ALLOWED)) ) {
-            send_command(MENU_COMMAND);
         }
     }
     
