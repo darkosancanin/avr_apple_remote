@@ -20,14 +20,14 @@
 //                             +----+
 
 // Voltage ladder values (using 10 bit ADC resolution) on PB4
-// UP:    0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
-// RIGHT: 0.77V @ 5V / 0.46V @ 3V / 158 (330R)
-// DOWN:  1.78V @ 5V / 1.08V @ 3V / 367 (680R)
+// RIGHT:    0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
+// DOWN:     0.77V @ 5V / 0.46V @ 3V / 158 (330R)
+// MENU:     1.78V @ 5V / 1.08V @ 3V / 367 (680R)
 
 // Voltage ladder values (using 10 bit ADC resolution) on PB3
-// LEFT:    0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
-// SELECT:  0.77V @ 5V / 0.46V @ 3V / 158 (330R)
-// MENU:    1.78V @ 5V / 1.08V @ 3V / 367 (680R)
+// UP:      0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
+// LEFT:    0.77V @ 5V / 0.46V @ 3V / 158 (330R)
+// SELECT:  1.78V @ 5V / 1.08V @ 3V / 367 (680R)
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -52,13 +52,13 @@
 #define DISABLE_IR_LED TCCR0A &= ~(1<<COM0A0); // Normal port operation, OC0A/OC0B disconnected [Page 78].
 
 // ADC voltage values of each button on PB4
-#define UP_BUTTON_ADC_VALUE 0
-#define RIGHT_BUTTON_ADC_VALUE 158
-#define DOWN_BUTTON_ADC_VALUE 367
-// ADC voltage values of each button on PB3
-#define LEFT_BUTTON_ADC_VALUE 0
-#define SELECT_BUTTON_ADC_VALUE 158
+#define RIGHT_BUTTON_ADC_VALUE 0
+#define DOWN_BUTTON_ADC_VALUE 158
 #define MENU_BUTTON_ADC_VALUE 367
+// ADC voltage values of each button on PB3
+#define UP_BUTTON_ADC_VALUE 0
+#define LEFT_BUTTON_ADC_VALUE 158
+#define SELECT_BUTTON_ADC_VALUE 367
 #define BUTTON_ADC_VARIANCE_ALLOWED 50 // Sets the variance allowed for the ADC conversion matches for the button presses
 
 // Pulse length manual adjustment. Manual adjustment made if internal clock is not accurate. 
@@ -150,6 +150,7 @@ void send_command(uint8_t command){
 // Pin change interrupt handler
 ISR(PCINT0_vect)
 {
+    GIMSK &= ~(1 << PCIE); // Disable pin change interrupts while handling the interrupt
     ADCSRA |= (1<<ADEN); //Enable ADC
     
     if (!(PINB & (1 << PINB4))) { // If PB4 is low then check if its buttons 1 to 3.
