@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="1.25" unitdist="mm" unit="mm" style="lines" multiple="1" display="yes" altdistance="0.025" altunitdist="inch" altunit="mm"/>
+<grid distance="0.025" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.0125" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="yes"/>
@@ -14,7 +14,7 @@
 <layer number="18" name="Vias" color="2" fill="1" visible="yes" active="yes"/>
 <layer number="19" name="Unrouted" color="6" fill="1" visible="yes" active="yes"/>
 <layer number="20" name="Dimension" color="15" fill="1" visible="yes" active="yes"/>
-<layer number="21" name="tPlace" color="0" fill="1" visible="yes" active="yes"/>
+<layer number="21" name="tPlace" color="15" fill="1" visible="yes" active="yes"/>
 <layer number="22" name="bPlace" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="23" name="tOrigins" color="15" fill="1" visible="yes" active="yes"/>
 <layer number="24" name="bOrigins" color="15" fill="1" visible="yes" active="yes"/>
@@ -128,7 +128,7 @@
 <wire x1="0" y1="0" x2="39.675" y2="0" width="0" layer="20"/>
 <wire x1="39.675" y1="0" x2="39.675" y2="76.19" width="0" layer="20"/>
 <wire x1="0" y1="76.19" x2="0" y2="0" width="0" layer="20"/>
-<text x="32.5" y="22.5" size="1.25" layer="21" font="fixed" rot="R270">Designed by
+<text x="32.5" y="23.75" size="1.25" layer="21" font="fixed" rot="R270">Designed by
 Darko, Gabriella &amp;
 Charlotte Sancanin</text>
 <text x="28.75" y="3.75" size="1.25" layer="22" font="fixed" rot="MR0">Designed by
@@ -138,6 +138,18 @@ Charlotte Sancanin</text>
 <text x="3.75" y="5" size="1.25" layer="21" font="fixed" rot="R90">Apple Remote Control</text>
 <text x="25" y="17.5" size="1" layer="22" font="fixed" rot="MR0">Revision 1.0
 March 2015</text>
+<text x="16.51" y="62.865" size="1" layer="21" font="fixed">ATtiny85</text>
+<text x="17.145" y="12.065" size="1" layer="21" font="fixed">CR2032
+BATTERY</text>
+<text x="7.37" y="64.52" size="0.8" layer="21" font="fixed">R1</text>
+<text x="7.37" y="60.575" size="0.8" layer="21" font="fixed">R2</text>
+<text x="5.195" y="56.9" size="0.8" layer="21" font="fixed">R3</text>
+<text x="5.195" y="53.09" size="0.8" layer="21" font="fixed">R4</text>
+<text x="30.595" y="64.385" size="0.8" layer="21" font="fixed">R5</text>
+<text x="30.595" y="60.575" size="0.8" layer="21" font="fixed">R6</text>
+<text x="32.905" y="56.9" size="0.8" layer="21" font="fixed">R7</text>
+<text x="32.905" y="53.09" size="0.8" layer="21" font="fixed">R8</text>
+<wire x1="0" y1="76.2" x2="39.675" y2="76.2" width="0" layer="20"/>
 </plain>
 <libraries>
 <library name="Itead_BP_110825.lbr">
@@ -1644,18 +1656,18 @@ Please make sure your boards conform to these design rules.</description>
 <contactref element="LED" pad="K"/>
 <contactref element="IR" pad="K"/>
 <contactref element="CC" pad="-"/>
-<polygon width="0.4064" layer="16">
-<vertex x="0" y="76.2"/>
-<vertex x="40.005" y="76.2"/>
-<vertex x="40.005" y="0"/>
-<vertex x="0" y="0"/>
-</polygon>
 <contactref element="MENU" pad="3"/>
 <contactref element="DOWN" pad="3"/>
 <contactref element="RIGHT" pad="3"/>
 <contactref element="SELECT" pad="3"/>
 <contactref element="LEFT" pad="3"/>
 <contactref element="UP" pad="3"/>
+<polygon width="0.4064" layer="16">
+<vertex x="0" y="76.2"/>
+<vertex x="39.6875" y="76.2"/>
+<vertex x="39.6875" y="0"/>
+<vertex x="0" y="0"/>
+</polygon>
 </signal>
 <signal name="N$5">
 <contactref element="MENU" pad="1"/>
@@ -1676,20 +1688,20 @@ Please make sure your boards conform to these design rules.</description>
 <signal name="VCC">
 <contactref element="IC" pad="8"/>
 <contactref element="CC" pad="+"/>
-<wire x1="15.875" y1="67.31" x2="15.24" y2="67.31" width="0.4064" layer="16"/>
-<wire x1="15.24" y1="67.31" x2="10.16" y2="67.31" width="0.4064" layer="16"/>
+<wire x1="15.875" y1="67.31" x2="10.16" y2="67.31" width="0.4064" layer="16"/>
 <wire x1="10.16" y1="67.31" x2="8.255" y2="65.405" width="0.4064" layer="16"/>
 <wire x1="8.255" y1="65.405" x2="8.255" y2="13.97" width="0.4064" layer="16"/>
 <wire x1="8.255" y1="13.97" x2="7.62" y2="13.335" width="0.4064" layer="16"/>
 <contactref element="R6" pad="1"/>
 <contactref element="R2" pad="1"/>
-<wire x1="23.495" y1="63.5" x2="19.05" y2="63.5" width="0.4064" layer="16"/>
-<wire x1="19.05" y1="63.5" x2="15.24" y2="67.31" width="0.4064" layer="16"/>
 <wire x1="27.305" y1="60.96" x2="26.035" y2="60.96" width="0.4064" layer="16"/>
 <wire x1="26.035" y1="60.96" x2="23.495" y2="63.5" width="0.4064" layer="16"/>
 <wire x1="12.065" y1="60.96" x2="12.7" y2="60.96" width="0.4064" layer="16"/>
 <wire x1="12.7" y1="60.96" x2="15.875" y2="64.135" width="0.4064" layer="16"/>
-<wire x1="15.875" y1="64.135" x2="15.875" y2="67.31" width="0.4064" layer="16"/>
+<wire x1="15.875" y1="64.135" x2="15.875" y2="66.04" width="0.4064" layer="16"/>
+<wire x1="15.875" y1="66.04" x2="15.875" y2="67.31" width="0.4064" layer="16"/>
+<wire x1="23.495" y1="63.5" x2="18.415" y2="63.5" width="0.4064" layer="16"/>
+<wire x1="18.415" y1="63.5" x2="15.875" y2="66.04" width="0.4064" layer="16"/>
 </signal>
 <signal name="N$11">
 <contactref element="IC" pad="5"/>
@@ -1710,8 +1722,9 @@ Please make sure your boards conform to these design rules.</description>
 <signal name="N$9">
 <contactref element="IC" pad="6"/>
 <contactref element="R1" pad="2"/>
-<wire x1="12.065" y1="64.77" x2="18.415" y2="64.77" width="0.4064" layer="1"/>
-<wire x1="18.415" y1="64.77" x2="20.955" y2="67.31" width="0.4064" layer="1"/>
+<wire x1="12.065" y1="64.77" x2="19.685" y2="64.77" width="0.4064" layer="1"/>
+<wire x1="19.685" y1="64.77" x2="20.955" y2="66.04" width="0.4064" layer="1"/>
+<wire x1="20.955" y1="66.04" x2="20.955" y2="67.31" width="0.4064" layer="1"/>
 </signal>
 <signal name="N$10">
 <contactref element="LED" pad="A"/>
