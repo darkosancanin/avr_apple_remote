@@ -1,34 +1,3 @@
-// ************* Implementation Overview ************* 
-// The Apple Remote uses an NEC IR protocol which consists of a differential PPM 
-// encoding on a 1:3 duty cycle 38 kHz 950 nm infrared carrier. [http://en.wikipedia.org/wiki/Apple_Remote]
-// This code uses a 50% duty cycle for simplicity which still works.
-// PWM is done using 'Clear Timer on Compare Match (CTC) Mode'. [Page 72] 11.7.2 describes CTC mode.
-// Output is on 0C0A which is PB0. The internal clock is set to run at 8Mhz.
-// No prescaler is used. @8Mhz 1 tick = .000000125 secs, 38khz is a cycle every .000026 secs. 
-// This means there is 208 ticks required for a full cycle (.000026/.000000125). OCR0A is set to half of this at 104.
-// This is half a full cycle, meaning it will be off for a half cycle, toggled due to COM0A0, and then on for a half cycle.
-// We enable/disable PWM by enabling toggle on compare mode and then disconnecting OC0A and assuming normal port operation. [Page 78]
-// The buttons are setup in a voltage ladder (http://en.wikipedia.org/wiki/Voltage_ladder). They are triggered via interrupts on PB4 
-// and PB3 and each button is identified via a ADC conversion.
-
-// ATtiny85, running @ 8MHZ
-//                             +-\/-+
-//                       PB5  1|    |8   VCC
-//   Buttons 4-6 (ADC3)  PB3  2|    |7   PB2
-//   Buttons 1-3 (ADC2)  PB4  3|    |6   PB1  Status LED
-//                       GND  4|    |5   PB0  (OC0A)   IR LED
-//                             +----+
-
-// Voltage ladder values (using 10 bit ADC resolution) on PB4
-// RIGHT:    0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
-// DOWN:     0.77V @ 5V / 0.46V @ 3V / 158 (330R)
-// MENU:     1.78V @ 5V / 1.08V @ 3V / 367 (680R)
-
-// Voltage ladder values (using 10 bit ADC resolution) on PB3
-// UP:      0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
-// LEFT:    0.77V @ 5V / 0.46V @ 3V / 158 (330R)
-// SELECT:  1.78V @ 5V / 1.08V @ 3V / 367 (680R)
-
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/power.h>
@@ -183,4 +152,3 @@ ISR(PCINT0_vect)
     
     _delay_us(100000); // Delay in place to stop multiple unintended presses
 }
-
