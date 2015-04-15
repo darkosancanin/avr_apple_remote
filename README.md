@@ -23,15 +23,15 @@ This is a simple project to replicate an Apple Remote Control using a ATtiny85 m
 - The MCU is set to sleep in the main loop (using SLEEP_MODE_PWR_DOWN mode) and is only awoken using pin change interrupts.
 
 ### Button Voltage Ladder Values
-- Voltage ladder values (using 10 bit ADC resolution) on PB4
-- RIGHT:    0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
-- DOWN:     0.77V @ 5V / 0.46V @ 3V / 158 (330R)
-- MENU:     1.78V @ 5V / 1.08V @ 3V / 367 (680R)
+Voltage ladder values (using 10 bit ADC resolution) on PB4
+RIGHT:    0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
+DOWN:     0.77V @ 5V / 0.46V @ 3V / 158 (330R)
+MENU:     1.78V @ 5V / 1.08V @ 3V / 367 (680R)
 
-- Voltage ladder values (using 10 bit ADC resolution) on PB3
-- UP:      0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
-- LEFT:    0.77V @ 5V / 0.46V @ 3V / 158 (330R)
-- SELECT:  1.78V @ 5V / 1.08V @ 3V / 367 (680R)
+Voltage ladder values (using 10 bit ADC resolution) on PB3
+UP:      0.00V @ 5V / 0.00V @ 3V / 0 (1.8K)
+LEFT:    0.77V @ 5V / 0.46V @ 3V / 158 (330R)
+SELECT:  1.78V @ 5V / 1.08V @ 3V / 367 (680R)
 
 ### Schematic
 ![Schematic](https://raw.githubusercontent.com/darkosancanin/avr_apple_remote/master/images/schematic.png)
