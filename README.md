@@ -1,4 +1,4 @@
-### Overview
+### Overview 
 This is a simple project to replicate an Apple Remote Control using a ATtiny85 microcontroller.
 
 ### Apple Remote/ NEC Protocol Overview
