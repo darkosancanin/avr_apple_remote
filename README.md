@@ -1,5 +1,5 @@
 ### Overview 
-This is a simple project to replicate an Apple Remote Control using a ATtiny85 microcontroller.
+ATtiny85 based micro controller project that replicates the functionality of an Apple remote control along with a simple hardware design for the remote control.
 
 ### Apple Remote/ NEC Protocol Overview
 - The Apple Remote uses an NEC IR protocol which consists of a differential PPM encoding on a 1:3 duty cycle 38 kHz 950 nm infrared carrier.
